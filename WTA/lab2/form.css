@@ -1,0 +1,22 @@
+.form_wrap{
+    border: solid 1px purple;
+}
+.form_wrap td{
+    padding: 5px 10px;
+}
+.form_wrap label{
+    display: block;
+    text-align: right;
+}
+
+.form_wrap input{
+    border: solid 1px purple;
+}
+.form_wrap .submit{
+    text-align: right;
+    border: none;
+}
+.form_wrap .reset{
+    text-align: center;
+    border: none;
+}

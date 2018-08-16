@@ -1,0 +1,17 @@
+h1{
+    text-align: center;
+}
+.news{
+    margin: 5% 20%;
+}
+.news p{
+    text-align: justify;
+    line-height: 1.5rem;
+}
+.news figure{
+    width: 100%;
+    margin: 0;
+}
+.news figure img{
+    width: 100%;
+}
