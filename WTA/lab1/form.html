@@ -1,0 +1,59 @@
+<html>
+    <head>
+        <title>Form</title>
+    </head>
+    <body>
+        <form action="success.html">
+            <h2>Customer Details</h2>
+            <table>
+                <tr>
+                    <td>First Name:</td>
+                    <td><input type="text" name="first_name"></td>
+                    <td>Initials:</td>
+                    <td><input type="text" name="surname_name"></td>
+                </tr>
+                <tr>
+                    <td>Surname:</td>
+                    <td><input type="text" name="initials"></td>
+                </tr>
+                <tr>
+                    <td>Company:</td>
+                    <td><input type="text" name="comapany"></td>
+                    <td>Age Group:</td>
+                    <td>
+                        <select name="age_group">
+                            <option value="1">16-20</option>
+                            <option value="2" selected="selected">21-30</option>
+                            <option value="3">31-40</option>
+                            <option value="4">41-60</option>
+                        </select>        
+                    </td>
+                </tr>
+                <tr>
+                    <td>Position:</td>
+                    <td><input type="text" name="position"></td>
+                    <td>Date Joined:</td>
+                    <td><input type="date" name="date_joined"></td>
+                </tr>
+                <tr>
+                    <td>Title:</td>
+                    <td><input type="text" name="title"></td>
+                    <td>Group:</td>
+                    <td>
+                        <select name="group">
+                            <option value="0"></option>                
+                            <option value="1">One</option>
+                            <option value="2">Two</option>
+                            <option value="3">Three</option>
+                        </select>
+                    </td>
+                </tr>
+            </table>
+            <br>Notes: 
+            <br><textarea name="notes" rows="7" cols="50"></textarea>
+            <br>
+            <input type="submit" value="Submit">
+            <input type="reset">
+        </form>       
+    </body>
+</html>
