@@ -2,7 +2,7 @@
 #include<omp.h>
 void main()
 {
-    int i,n;
+    int i,j,n,a[50][50];
     double t1,t2;
     printf("Enter the value of n");
     scanf("%d",&n);
@@ -10,12 +10,14 @@ void main()
     #pragma omp parallel num_threads(4)
     {
         int id=omp_get_thread_num();
-        #pragma omp for nowait lastprivate(i)
+        #pragma omp for collapse(2)
         for(i=0;i<n;i++)
-            printf("Thread %d: value of i : %d\n",id,i);
-        printf("\nI am Thread %d NO WAIT EFFECT %d\n",id,i);
+            for(j=0;j<n;j++)
+            {
+                a[i][j]=i+j;
+                printf("a[%d][%d] is %d\n",i,j,a[i][j]);
+            }
     }
-    printf("\n%d\n",i);
     t2=omp_get_wtime();
     printf("Time taken is %f",t2-t1);
 }
