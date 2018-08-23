@@ -1,0 +1,9 @@
+create database db1;
+use db1;
+create table employee ( Fname varchar(255),  Minit char, Lname varchar(255), Snn int PRIMARY KEY, Bdate Date, Address varchar(255), Sex char, Salary int, Super_ssn int, Dno int );
+create table department( Dname varchar(255), Dnumber int primary key, Mgr_ssn int, Mgr_start_date Date );
+create table dept_locations( Dnumber int , Dlocation varchar(255) primary key );
+create table works_on ( essn int, Pno int primary key, Hours decimal(3,1) );
+create table project ( Pname varchar(255), Pnumber int primary key, Plocation varchar(255), Dnum int);
+create table dependent ( essn int, dependent_name varchar(255) primary key, sex char, Bdate Date, relationship varchar(255));
+insert into employee value('John', 'B', 'Smith', 123, 19650109, '731 Hu TX', 'M', 30000, 333, 5);
