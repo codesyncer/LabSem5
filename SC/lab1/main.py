@@ -1,9 +1,9 @@
 import pandas as pd
 import numpy as np
 
-def spm(data, class_feat):
+
+def spm(data, class_feat, learning_rate=0.5, fire_threshold=0):
     n_rows, n_feat = data.shape
-    w = [1 / n_feat] * n_feat
     class_index = list(data).index(class_feat)
     class_count = -1
     class_map = {}
@@ -18,36 +18,40 @@ def spm(data, class_feat):
     np_data = data.values
     np.random.shuffle(np_data)
     test_data, train_data = np_data[:int(.9 * n_rows)], np_data[int(.9 * n_rows):]
-    err, threshold, n_iter, l, mid = 0, 0, 0, .2, -10
+    err, err_threshold, n_iter = 0, 0, 0
+    w = [1 / n_feat] * n_feat
     while True:
         n_iter += 1
         err = 0
         for i in range(test_data.shape[0]):
-            y = 0
+            w_sum = 0
             for j in range(n_feat):
-                y += w[j] * (1 if class_index == j else test_data[i][j])
-            y = 1 if y > mid else 0
+                w_sum += w[j] * (1 if class_index == j else test_data[i][j])
+            y = 1 if w_sum > fire_threshold else 0
             z = test_data[i][class_index]
             for j in range(n_feat):
-                w[j] += l * (z - y) * (1 if class_index == j else test_data[i][j])
+                w[j] += learning_rate * (z - y) * (1 if class_index == j else test_data[i][j])
             err += z - y
-        if abs(err) <= threshold:
+        if abs(err) <= err_threshold:
             break
     print('Number of iterations: %d' % n_iter)
-    err = 0
+    test_err = 0
     for i in range(train_data.shape[0]):
         y = 0
         for j in range(n_feat):
             y += w[j] * (1 if class_index == j else test_data[i][j])
-        y = 1 if y > mid else 0
+        y = 1 if y > fire_threshold else 0
         z = test_data[i][class_index]
-        err += z - y
-    print('Error: %d' % err)
+        test_err += z - y
+    print('Error: %d' % test_err)
 
 
 def main():
+    data = pd.read_csv('IRIS.csv')
+    spm(data, 'class', 0.5, -10)
+
     data = pd.read_csv('SPECT.csv')
-    spm(data, 'Class')
+    spm(data, 'Class', 0.9, 10)
 
 
 if __name__ == '__main__':
