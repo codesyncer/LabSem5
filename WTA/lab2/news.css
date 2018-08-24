@@ -11,6 +11,8 @@ h1{
 .news figure{
     width: 100%;
     margin: 0;
+    border: 1px solid;
+    padding: 10px;
 }
 .news figure img{
     width: 100%;
