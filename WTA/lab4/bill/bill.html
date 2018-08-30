@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Bill</title>
+        <script src="bill.js"></script>
+        <link rel="stylesheet" href="bill.css">
+    </head>
+    <body onload="init()">
+        <form>
+            <table>
+                <tr>
+                    <th>Items</th>
+                    <th>Price /Kg</th>
+                    <th>Quantity (in Kg)</th>
+                </tr>
+                <tr class="items">
+                    <td>Item1</td>
+                    <td>100</td>
+                    <td><input type="number" ></td>
+                </tr>
+                <tr class="items">
+                    <td>Item2</td>
+                    <td>40</td>
+                    <td><input type="number" ></td>
+                </tr>
+                <tr class="items">
+                    <td>Item3</td>
+                    <td>25</td>
+                    <td><input type="number" ></td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td><input type="button" value="Click for total amount"></td>
+                    <td><label id="total"></label></td>
+                </tr>    
+            </table>
+            
+        </form>
+    </body>
+</html>

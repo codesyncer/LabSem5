@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Feedback</title>
+        <script src="feedback.js"></script>
+    </head>
+    <body onload="printForm()">
+        <form>
+            <table>
+                <tr>
+                    <td>Name:</td>
+                    <td><input type="text" name="name" id="form_name" onkeyup="printForm()"></td>
+                </tr>
+                <tr>
+                    <td>City:</td>
+                    <td><input type="text" name="city" id="form_city" onkeyup="printForm()"></td>
+                </tr>
+                <tr>
+                    <td>Gender:</td>
+                    <td>
+                        <select type="text" name="gender" id="form_gender" onchange="printForm()">
+                            <option>Male</option>
+                            <option>Female</option>
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Comments:</td>
+                </tr>
+                <tr>
+                    <td colspan="2">
+                        <textarea  style="width: 100%; height: 100%;" name="comments" id="form_comments" onkeyup="printForm()"></textarea>
+                    </td>
+                </tr>
+            </table>
+            <input type="button" value="Submit">
+        </form>
+        <p id="byDOM"></p>
+        <p id="byName"></p>
+        <p id="byId"></p>
+    </body>
+</html>
