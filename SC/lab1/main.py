@@ -20,7 +20,7 @@ def spm(data, class_feat, learning_rate=0.5, fire_threshold=0):
     test_data, train_data = np_data[:int(.9 * n_rows)], np_data[int(.9 * n_rows):]
     err, err_threshold, n_iter = 0, 0, 0
     w = [1 / n_feat] * n_feat
-    while True:
+    while True and n_iter < 1000:
         n_iter += 1
         err = 0
         for i in range(test_data.shape[0]):
@@ -31,8 +31,8 @@ def spm(data, class_feat, learning_rate=0.5, fire_threshold=0):
             z = test_data[i][class_index]
             for j in range(n_feat):
                 w[j] += learning_rate * (z - y) * (1 if class_index == j else test_data[i][j])
-            err += z - y
-        if abs(err) <= err_threshold:
+            err += abs(z - y)
+        if err <= err_threshold:
             break
     print('Number of iterations: %d' % n_iter)
     test_err = 0
@@ -42,16 +42,16 @@ def spm(data, class_feat, learning_rate=0.5, fire_threshold=0):
             y += w[j] * (1 if class_index == j else test_data[i][j])
         y = 1 if y > fire_threshold else 0
         z = test_data[i][class_index]
-        test_err += z - y
+        test_err += abs(z - y)
     print('Error: %d' % test_err)
 
 
 def main():
     data = pd.read_csv('IRIS.csv')
-    spm(data, 'class', 0.5, -10)
+    spm(data, 'class', 0.5, 0.6)
 
     data = pd.read_csv('SPECT.csv')
-    spm(data, 'Class', 0.9, 10)
+    spm(data, 'Class', 0.9, 0.6)
 
 
 if __name__ == '__main__':
