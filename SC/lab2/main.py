@@ -74,15 +74,24 @@ def cross_val_k(np_data, np_class, k, callback):
         callback(train_data, train_class, test_data, test_class)
 
 
-def error_desc(y, y_pred):
-    t0, f0, t1, f1 = 0, 0, 0, 0
+def error_desc(y, y_pred, err_params):
+    mp0, mr0, mp1, mr1, macc = err_params
+    t0, f0, t1, f1, acc = 0, 0, 0, 0, 0
     for yi, yi_pred in zip(y, y_pred):
         t0 += int(yi == yi_pred == 0)
         t1 += int(yi == yi_pred == 1)
         f0 += int(yi != yi_pred == 0)
         f1 += int(yi != yi_pred == 1)
+        acc += int(yi == yi_pred)
     try:
-        print('P+: %f R+: %f P-: %f R-: %f' % (t0 / (t0 + f0), t0 / (t0 + f1), t1 / (t1 + f1), t1 / (t1 + f0)))
+        acc /= y.shape[0]
+        print('Acc: %f P+: %f R+: %f P-: %f R-: %f' % (
+            acc, t0 / (t0 + f0), t0 / (t0 + f1), t1 / (t1 + f1), t1 / (t1 + f0)))
+        mp0.append(t0 / (t0 + f0))
+        mr0.append(t0 / (t0 + f1))
+        mp1.append(t1 / (t1 + f1))
+        mr1.append(t1 / (t1 + f0))
+        macc.append(acc)
     except ZeroDivisionError:
         print('Ignore')
 
@@ -91,13 +100,15 @@ def main():
     data = pd.read_csv('IRIS.csv')
 
     np_data, np_class, _ = pre_pro(data, 'class')
+    err_params = ([], [], [], [], [])
 
     def cb_main(train_data, train_class, test_data, test_class):
         params = train(train_data, train_class, 0.2)
         y_pred = test(test_data, params)
-        error_desc(test_class, y_pred)
+        error_desc(test_class, y_pred, err_params)
 
     cross_val_k(np_data, np_class, 10, cb_main)
+    print(err_params)
 
 
 main()
