@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Guestbook</title>
+    </head>
+    <body>
+        <form id="guest_form">
+            <label>First name: </label>
+            <input name="first_name" type="text">
+            <br>
+            <label>Last name: </label>            
+            <input name="last_name" type="text">
+            <br>
+            <label>Email: </label>
+            <input name="email" type="text">
+            <br>
+            <label>Gender: </label>
+            <input name="gender" type="radio" value="Male"> Male
+            <input name="gender" type="radio" value="Female"> Female
+            <input name="gender" type="radio" value="Other"> Other
+            <br>
+            <label>Comments: </label>
+            <br>
+            <textarea name="comments"></textarea>
+            <br>
+            <input type="button" onclick="check()" value="Check">
+            <input type="submit">
+            <input type="reset">
+        </form>
+        <label id="msg_box"></label>
+        <script>
+            function check(){
+                let form = document.getElementById("guest_form");
+                let msg = [];
+                let input = form.first_name.value;
+                if(input.length <= 0)
+                    msg.push('first name cannot be empty');
+                if(input.length > 20)
+                    msg.push('first name cannot be longer than 20 chars');
+                input = form.last_name.value;
+                if(input.length <= 0)
+                    msg.push('last name cannot be empty');
+                if(input.length > 20)
+                    msg.push('last name cannot be longer than 20 chars');
+                if(/^[a-zA-Z0-9.]+@[a-zA-Z0-9]+\.[a-zA-Z0-9.]+$/.test(form.email.value) == false)
+                    msg.push('invalid email');
+                if(['Male', 'Female', 'Other'].indexOf(form.gender.value) == -1)
+                    msg.push('select a gender');
+                if(!form.comments.value.length)
+                    msg.push('enter some comments');
+                let msg_box = document.getElementById('msg_box');
+                if(msg.length)
+                    msg_box.innerHTML = 'Error: ' + msg.join(', ');
+                else
+                    msg_box.innerHTML = 'Success!';
+            }
+        </script>
+    </body>
+</html>
