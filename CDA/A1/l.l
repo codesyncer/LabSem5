@@ -1,18 +1,68 @@
+%option yylineno
 %{
-    #include "y.tab.h"
+    #define YYERROR_VERBOSE
+    #include "y.tab.c"
 %}
 %%
-[ \t]               ;
-return              { return RETURN; }
-if                  { return IF; }
-while               { return WHILE; }
-[+-]?[1-9][0-9]*    { yylval.num= atoi(yytext); return number; }
-0                   { yylval.num= 0; return number; }
-[a-z]      	        { yylval.id=yytext[0]; return identifier; }
-[\+\-\*\/=;\<\>]    { yylval.id=yytext[0]; return basic_op; }
-[\[\]\n]            { return yytext[0];}
-.                   { printf("Error: Unknown Symbol '%c'\n", *yytext); exit(0); }
+if { 
+    return IF; 
+}
+then {
+    return THEN;
+}
+else {
+    return ELSE;
+}
+endif {
+    return ENDIF;
+}
+print {
+    return PRINT;
+}
+newline {
+    return NEWLINE;
+}
+\".*\" {
+    strcpy(yylval.str, yytext+1);
+    yylval.str[strlen(yytext)-2] = 0;
+    return STRING;
+}
+\/\/.* {
+    strcpy(yylval.str, yytext+2);
+    return COMMENT;
+}
+[a-zA-Z][0-9a-zA-Z]* {
+    strcpy(yylval.str, yytext+2);
+    return ID;
+}
+[0-9]+ {
+    yylval.num = atoi(yytext);
+    return INT;
+}
+[\+\-\*\/=\<\>\(\);] { 
+    return yytext[0];
+}
+=[=>] {
+    strcpy(yylval.str, yytext);
+    return OPERATOR;
+}
+[!<]= {
+    strcpy(yylval.str, yytext);
+    return OPERATOR;
+}
+[ \t\r\n]+ ;
+. {
+    printf("\n====\n");
+    printf("Error at %d: lexical error, Unexpected symbol starting from '%c'", yylineno, *yytext);
+    printf("\n====\n\n");
+}
 %%
 
-int yywrap(){ return 0; }
-void yyerror(char* msg){ printf("Error: %s\n", msg); exit(0); }
+int yywrap(){
+    return 1;
+}
+void yyerror(const char* msg){
+    printf("\n====\n");
+    printf("Error at %d: %s", yylineno, msg);
+    printf("\n====\n\n");
+}

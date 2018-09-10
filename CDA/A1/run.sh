@@ -1,7 +1,9 @@
-flex -o scan.c flexCode.l
+yacc y.y
+flex l.l
 if test $? -eq 0; then
-    gcc -o scanner scan.c
+    gcc lex.yy.c
     if test $? -eq 0; then
-        ./scanner <<< $1
+        echo -e '\n\n======\nOUTPUT\n======\n\n'
+        ./a.out < $1
     fi
 fi
