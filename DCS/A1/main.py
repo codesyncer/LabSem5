@@ -16,11 +16,13 @@ def m_sleep(t):
     #     raise KeyboardInterrupt
 
 
-def diff(vector, timestamp):
-    m_count = 0
+def diff(vector, timestamp, from_id):
+    if timestamp[from_id] - vector[from_id] != 1:
+        return False
     for i in range(len(vector)):
-        m_count += max(0, timestamp[i] - vector[i])
-    return m_count
+        if i != from_id and timestamp[i] > vector[i]:
+            return False
+    return True
 
 
 def accept(tup, vector):
@@ -51,19 +53,20 @@ def receive(sock, vector):
         if not BSS:
             accept((timestamp, msg), vector)
             continue
-        m_count = diff(vector, timestamp)
-        if m_count != 1:
-            buffer.append((timestamp, msg))
+        if not diff(vector, timestamp, from_id):
+            buffer.append((timestamp, msg, from_id))
         else:
             accept((timestamp, msg), vector)
             for _ in range(n):
-                for j in range(len(buffer)):
-                    if diff(vector, buffer[j][0]) == 1:
-                        accept(buffer[j], vector)
-                        buffer = buffer[:j] + buffer[j + 1:]
+                j = 0
+                while j < len(buffer):
+                    if diff(vector, buffer[j][0], buffer[j][2]):
+                        accept((buffer[j][0], buffer[j][1]), vector)
                         break
+                    j += 1
                 else:
                     break
+                buffer = buffer[:j] + buffer[j + 1:]
 
 
 def port(pid):
@@ -76,8 +79,6 @@ def send(real_msg, from_id, sock, vector):
         return
     vector[from_id] += 1
     msg = ','.join(str(pid) for pid in vector) + ';' + real_msg
-    if from_id == 1:
-        m_sleep(5)
     for pid in range(len(vector)):
         if pid != from_id:
             if from_id == 0 and pid == 2:
@@ -98,11 +99,13 @@ def main():
     receive_thread = threading.Thread(target=receive, args=[sock, vector])
     receive_thread.start()
     m_sleep(5)
+    if sid == 1:
+        m_sleep(5)
     try:
         while True:
             real_msg = 'MSG from %d' % sid
             send(real_msg, sid, sock, vector)
-            m_sleep(1)
+            m_sleep(1000)
     except KeyboardInterrupt:
         pass
     run = False

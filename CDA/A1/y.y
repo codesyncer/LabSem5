@@ -27,6 +27,13 @@ extern void yyerror(const char*);
 %type <con> expr
 %type <con> error
 
+%nonassoc IF1
+%nonassoc ELSE
+%left OPERATOR '<' '>'
+%left '+' '-'
+%left '*' '/'
+%nonassoc UMINUS
+
 %%
 program: stmt_list { printf("%s\n", "program -> stmt_list"); };
 stmt_list:
@@ -42,9 +49,9 @@ print_stmt:
     PRINT expr ';' { printf("%s\n", "print_stmt -> PRINT expr ;"); }
     | PRINT STRING ';' { printf("%s\n", "print_stmt -> PRINT STRING ;"); }
     | PRINT NEWLINE ';' { printf("%s\n", "print_stmt -> PRINT NEWLINE ;"); }
-    | error ';';
+    | PRINT error ';';
 if_stmt:
-    IF expr THEN stmt_list ENDIF { printf("%s\n", "if_stmt -> IF expr THEN stmt_list ENDIF"); } 
+    IF expr THEN stmt_list ENDIF %prec IF1 { printf("%s\n", "if_stmt -> IF expr THEN stmt_list ENDIF"); } 
     | IF expr THEN stmt_list ELSE stmt_list ENDIF { printf("%s\n", "if_stmt -> IF expr THEN stmt_list ELSE stmt_list ENDIF"); }
     | error ENDIF;
 expr: '(' expr ')' { printf("%s\n", "expr -> ( expr )"); }
@@ -54,7 +61,8 @@ expr: '(' expr ')' { printf("%s\n", "expr -> ( expr )"); }
     | expr '/' expr { printf("%s\n", "expr -> expr / expr"); }
     | expr '<' expr { printf("%s\n", "expr -> expr < expr"); }
     | expr '>' expr { printf("%s\n", "expr -> expr > expr"); }
-    | '-' expr { printf("%s\n", "expr -> - expr"); }
+    | expr OPERATOR expr { printf("expr -> expr %s expr\n", $2); }
+    | '-' expr %prec UMINUS { printf("%s\n", "expr -> - expr"); }
     | INT { printf("%s\n", "expr -> INT"); }
     | ID { printf("%s\n", "expr -> ID"); };   
 %%

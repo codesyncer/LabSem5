@@ -22,7 +22,6 @@ int main(){
     omp_set_num_threads(2);
 #pragma omp parallel
 {
-#pragma omp master nowait
     printf("%f\n", inc(db));
 }
     t2 = omp_get_wtime();
