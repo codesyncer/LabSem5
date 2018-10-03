@@ -8,7 +8,7 @@ class Com:
     base_port = 3000
     read_size = 1024
 
-    def __init__(self, n, pid, callback):
+    def __init__(self, n, pid, recv_cb=None, send_cb=None):
         self.pid = pid
         self.n = n
         self.vector = [0] * n
@@ -18,7 +18,8 @@ class Com:
         self.buffer = []
         self.run = True
         self.active_ses = True
-        self.callback = callback
+        self.send_cb = send_cb
+        self.recv_cb = recv_cb
 
     def init(self):
         self.sock.bind(('localhost', Com.base_port + self.pid))
@@ -30,7 +31,11 @@ class Com:
         self.receive_thread.join()
         self.sock.close()
 
-    def send(self, to_pid, user_msg):
+    def sleepy_send(self, delay, to_pid, msg):
+        sleep(delay)
+        self.sock.sendto(msg.encode(), ('localhost', Com.get_port(to_pid)))
+
+    def send(self, to_pid, user_msg, delay_send=None):
         self.vector[self.pid] += 1
         msg = ''
         for stamp in self.V_P:
@@ -39,25 +44,33 @@ class Com:
             msg += ';'
         msg += ','.join(str(pid) for pid in self.vector) + ';' + user_msg
         self.V_P[to_pid] = list(self.vector)
-        self.sock.sendto(msg.encode(), ('localhost', Com.get_port(to_pid)))
+        if delay_send is None:
+            self.sock.sendto(msg.encode(), ('localhost', Com.get_port(to_pid)))
+        else:
+            threading.Thread(target=self.sleepy_send, args=(delay_send, to_pid, msg)).start()
+        if self.send_cb is not None:
+            self.send_cb(user_msg, self.vector)
 
     def gt(self, t1, t2):
-        return True
+        flag = False
+        for t1i, t2i in zip(t1, t2):
+            if t1i < t2i:
+                return False
+            flag = flag or t1i > t2i
+        return flag
 
-    def lt(self, t1, t2):
-        return True
-
-    def deliver(self, v_m, stamp, user_msg, from_pid):
+    def deliver(self, v_m, stamp, user_msg):
         for i in range(self.n):
             if i != self.pid and v_m[i] is not None:
                 if self.V_P[i] is None:
                     self.V_P[i] = list(v_m[i])
                 else:
                     self.V_P[i] = [max(t1, t2) for t1, t2 in zip(self.V_P[i], v_m[i])]
+        self.vector[self.pid] += 1
         for i in range(self.n):
             self.vector[i] = max(stamp[i], self.vector[i])
-        self.vector[self.pid] += 1
-        self.callback(user_msg, stamp)
+        if self.recv_cb is not None:
+            self.recv_cb(user_msg, self.vector)
 
     def on_recv(self, from_pid, data_str):
         data = data_str.split(';')
@@ -69,7 +82,7 @@ class Com:
             else:
                 v_m.append(None)
         if not self.active_ses or v_m[self.pid] is None or not self.gt(v_m[self.pid], self.vector):
-            self.deliver(v_m, timestamp, msg, from_pid)
+            self.deliver(v_m, timestamp, msg)
             return True
         return False
 
@@ -108,18 +121,21 @@ def main():
     def cb(msg, timestamp):
         print(timestamp, msg)
 
-    com = Com(n, pid, cb)
+    def cb1(msg, timestamp):
+        print(timestamp, msg + ' (sent)')
+
+    com = Com(n, pid, cb, cb1)
     com.init()
     try:
         while True:
-            com.send(input())
+            pid, msg = tuple(input().split(':'))
+            com.send(int(pid), msg)
     except KeyboardInterrupt:
         pass
     com.finalize()
 
 
 def main1():
-    # 3 processes,
     n, pid = int(sys.argv[1]), int(sys.argv[2])
 
     def cb(msg, timestamp):
@@ -130,21 +146,20 @@ def main1():
     try:
         if pid == 0:
             sleep(5)
-            print('SENT: MSG from P0')
-            com.send('MSG from P0', [0, 5, 15])
+            sleep(35)
         if pid == 1:
             sleep(5)
-            sleep(10)
-            print('SENT: MSG from P1')
-            com.send('MSG from P1')
+            sleep(15)
+            com.send(0, 'MSG from P1', 5)
+            sleep(35 - 15)
         if pid == 2:
             sleep(5)
-            sleep(20)
-            print('SENT: MSG from P2')
-            com.send('MSG from P2')
+            com.send(0, 'MSG from P2', 25)
+            sleep(5)
+            com.send(1, 'MSG from P2', 5)
+            sleep(35 - 5)
     except KeyboardInterrupt:
         pass
-    sleep(10)
     com.finalize()
 
 
