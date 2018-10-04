@@ -9,6 +9,7 @@
 <body>
     <?php
         include 'var_count.php';
+        date_default_timezone_set('Asia/Calcutta');
         $greets = array("Hi","Hello","Yello","Hola","Namaste");
         echo($greets[mt_rand(0, 4)]." visitor #".$m_count."!<br>The time is ".date("h:i:s a"));
         $var_count = fopen(__DIR__.DIRECTORY_SEPARATOR."var_count.php", "w") or die("Unable to open file!");
