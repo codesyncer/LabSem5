@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Register</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" media="screen" href="main.css" />
+</head>
+<body>
+    <form id="reg_container" action="index.php" method="POST">
+        <h2>Event Registeration Form</h2>
+        <hr>
+        <label>How many people are you buying tickets for?</label><br>
+        <input type="number" name="n_tickets" value="1"><br>
+        <label>T-Shirt Size</label><br>
+        <input type="radio" name="shirt_size" value="S">S
+        <input type="radio" name="shirt_size" value="M">M
+        <input type="radio" name="shirt_size" value="L">L
+        <input type="radio" name="shirt_size" value="XL">XL
+        <hr>
+        <label>Name </label><label style="color:red;">*</label><br>
+        <input type="text" name="first_name" placeholder="First name">
+        <input type="text" name="last_name" placeholder="Last name"><br>
+        <label>Email </label><br>
+        <input type="text" name="email"><br>
+        <input type="submit">
+    </form>
+</body>
+</html>

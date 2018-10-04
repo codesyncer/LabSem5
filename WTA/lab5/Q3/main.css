@@ -1,0 +1,15 @@
+#reg_container{
+    display: inline-block;
+    padding: 20px;
+}
+#reg_container label{
+    font-weight: bold;
+}
+#reg_container *{
+    margin: 10px 15px;
+}
+#bill_container{
+    display: inline-block;
+    border: solid;
+    padding: 20px;
+}

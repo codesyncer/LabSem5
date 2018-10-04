@@ -84,6 +84,7 @@ class Com:
         if not self.active_ses or v_m[self.pid] is None or not self.gt(v_m[self.pid], self.vector):
             self.deliver(v_m, timestamp, msg)
             return True
+        print(timestamp, msg, '(buffered)')
         return False
 
     def recv(self):
@@ -122,7 +123,7 @@ def main():
         print(timestamp, msg)
 
     def cb1(msg, timestamp):
-        print(timestamp, msg + ' (sent)')
+        print(timestamp, msg, '(sent)')
 
     com = Com(n, pid, cb, cb1)
     com.init()
@@ -137,31 +138,93 @@ def main():
 
 def main1():
     n, pid = int(sys.argv[1]), int(sys.argv[2])
+    print('P%d' % pid)
 
     def cb(msg, timestamp):
         print(timestamp, msg)
 
-    com = Com(n, pid, cb)
+    def cb1(msg, timestamp):
+        print(timestamp, msg, '(sent)')
+
+    com = Com(n, pid, cb, cb1)
     com.init()
     try:
         if pid == 0:
-            sleep(5)
-            sleep(35)
+            pass
         if pid == 1:
-            sleep(5)
-            sleep(15)
+            sleep(20)
             com.send(0, 'MSG from P1', 5)
-            sleep(35 - 15)
         if pid == 2:
             sleep(5)
             com.send(0, 'MSG from P2', 25)
             sleep(5)
             com.send(1, 'MSG from P2', 5)
-            sleep(35 - 5)
+        input()
+    except KeyboardInterrupt:
+        pass
+    com.finalize()
+
+
+def main2():
+    n, pid = int(sys.argv[1]), int(sys.argv[2])
+    print('P%d' % pid)
+
+    def cb(msg, timestamp):
+        print(timestamp, msg)
+
+    def cb1(msg, timestamp):
+        print(timestamp, msg + ' (sent)')
+
+    com = Com(n, pid, cb, cb1)
+    com.init()
+    try:
+        if pid == 0:
+            sleep(5)
+            com.send(1, 'MSG from P0', 25)
+            sleep(5)
+            com.send(2, 'MSG from P0', 5)
+        if pid == 1:
+            pass
+        if pid == 2:
+            sleep(20)
+            com.send(1, 'MSG from P2', 5)
+        input()
+    except KeyboardInterrupt:
+        pass
+    com.finalize()
+
+
+def main3():
+    n, pid = int(sys.argv[1]), int(sys.argv[2])
+    print('P%d' % pid)
+
+    def cb(msg, timestamp):
+        print(timestamp, msg)
+
+    def cb1(msg, timestamp):
+        print(timestamp, msg + ' (sent)')
+
+    com = Com(n, pid, cb, cb1)
+    com.init()
+    try:
+        if pid == 0:
+            sleep(40)
+            com.send(2, 'MSG from P0', 5)
+        if pid == 1:
+            sleep(20)
+            com.send(2, 'MSG from P1', 30)
+            sleep(5)
+            com.send(0, 'MSG from P1', 5)
+        if pid == 2:
+            sleep(5)
+            com.send(0, 'MSG from P2', 30)
+            sleep(5)
+            com.send(1, 'MSG from P2', 5)
+        input()
     except KeyboardInterrupt:
         pass
     com.finalize()
 
 
 if __name__ == '__main__':
-    main1()
+    main3()
