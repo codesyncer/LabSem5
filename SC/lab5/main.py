@@ -95,6 +95,7 @@ def test(np_data, prob_tab, prob_class):
 def cross_val_k(np_data, np_class, k, callback):
     random.seed(5)
     j = [0] + random.sample(range(np_data.shape[0]), k - 1) + [np_data.shape[0]]
+    j = [0] + [np_data.shape[0]*.9] + [np_data.shape[0]]
     for i in range(k):
         train_data = np.concatenate((np_data[:j[i]], np_data[j[i + 1]:]))
         train_class = np.concatenate((np_class[:j[i]], np_class[j[i + 1]:]))
@@ -107,18 +108,18 @@ def error_desc(y, y_pred, err_params):
     macc, mp0, mr0, mp1, mr1 = err_params
     t0, f0, t1, f1, acc = 0, 0, 0, 0, 0
     for yi, yi_pred in zip(y, y_pred):
-        t0 += int(yi == yi_pred == 0)
-        t1 += int(yi == yi_pred == 1)
-        f0 += int(yi != yi_pred == 0)
-        f1 += int(yi != yi_pred == 1)
+        # t0 += int(yi == yi_pred == 0)
+        # t1 += int(yi == yi_pred == 1)
+        # f0 += int(yi != yi_pred == 0)
+        # f1 += int(yi != yi_pred == 1)
         acc += int(yi == yi_pred)
     try:
         acc /= y.shape[0]
         macc.append(100 * acc)
-        mp0.append(100 * t0 / (t0 + f0))
-        mr0.append(100 * t0 / (t0 + f1))
-        mp1.append(100 * t1 / (t1 + f1))
-        mr1.append(100 * t1 / (t1 + f0))
+        # mp0.append(100 * t0 / (t0 + f0))
+        # mr0.append(100 * t0 / (t0 + f1))
+        # mp1.append(100 * t1 / (t1 + f1))
+        # mr1.append(100 * t1 / (t1 + f0))
     except ZeroDivisionError:
         print('Ignore')
 
@@ -129,9 +130,11 @@ def main():
 
     def nb_fitness(chrome):
         good_data = np_data.copy()
+        delete_cols = []
         for i in range(len(chrome)):
             if chrome[i] == 0:
-                np.delete(good_data, i, 1)
+                delete_cols.append(i)
+        good_data = np.delete(good_data, delete_cols, 1)
         err_params = ([], [], [], [], [])
 
         def cb_main(train_data, train_class, test_data, test_class):
@@ -140,12 +143,12 @@ def main():
             y_pred = test(test_data, prob_tab, prob_class)
             error_desc(test_class, y_pred, err_params)
 
-        cross_val_k(np_data, np_class, 2, cb_main)
+        cross_val_k(good_data, np_class, 10, cb_main)
 
         return sum(err_params[0]) / len(err_params[0])
 
     chromosomes = generate(np_data.shape[1], 30)
-    for _ in range(10):
+    for _ in range(100):
         select(chromosomes, nb_fitness)
         crossover(chromosomes, 25)
         mutate(chromosomes, 10)
