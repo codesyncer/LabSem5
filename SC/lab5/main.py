@@ -3,49 +3,36 @@ import numpy as np
 import random
 
 
-def upper(arr, x):
-    low, high = 0, len(arr) - 1
-    mid = (low + high) // 2
-    while low < high:
-        if arr[mid] < x:
-            low = mid + 1
-        elif arr[mid] > x:
-            high = mid
-        else:
-            break
-        mid = (low + high) // 2
-    return mid
-
-
 def generate(length, n):
-    return [[random.randint(0, 1) for _ in range(length)] for _ in range(n)]
+    return np.random.randint(0, 2, (n, length))
 
 
-def select(chromes, fitness):
-    fitness_vec = [fitness(chrome) for chrome in chromes]
-    fitness_sum = sum(fitness_vec)
-    prob_vec = [fit / fitness_sum for fit in fitness_vec]
-    cumulative = [0] * len(chromes)
-    for i in range(len(chromes)):
-        cumulative[i] = prob_vec[i] + cumulative[i - 1]
-    chromes[:] = [chromes[upper(cumulative, random.random())] for _ in range(len(chromes))]
+def select(chromes, fitness_func):
+    n = chromes.shape[0]
+    fitness = np.apply_along_axis(fitness_func, 0, chromes)
+    fitness_sum = np.sum(fitness)
+    cumulative = np.cumsum(fitness / fitness_sum)
+    chromes[:] = np.array([chromes[np.searchsorted(cumulative, (random.random(),), side='left')[0]] for _ in range(n)])
 
 
 def crossover(chromes, rate):
-    n = int(len(chromes) * rate / 100)
-    m_chromes = random.sample(range(len(chromes[0])), n)
-    new_chromes = []
-    for i in range(-1, len(m_chromes) - 1):
-        point = random.randint(0, len(chromes[0]) - 1)
-        new_chromes.append(chromes[m_chromes[i]][:point] + chromes[m_chromes[i + 1]][point:])
-    for i in range(-1, len(m_chromes) - 1):
-        chromes[m_chromes[i]] = new_chromes[i + 1]
+    n = chromes.shape[0]
+    length = chromes[0].shape[0]
+    n_crossover = int(len(chromes) * rate / 100)
+    index = random.sample(range(n), n_crossover)
+    new_chromes = chromes.copy()
+    for i in range(n_crossover):
+        point = random.randint(0, length - 1)
+        new_chromes[index[i - 1]] = np.concatenate((chromes[index[i - 1]][:point], chromes[index[i]][point:]))
+    chromes[:] = new_chromes
 
 
 def mutate(chromes, rate):
-    n = int(len(chromes) * len(chromes[0]) * rate / 100)
-    for i in random.sample(range(len(chromes) * len(chromes[0])), n):
-        chromes[i // len(chromes)][i % len(chromes[0])] = 1 - chromes[i // len(chromes)][i % len(chromes[0])]
+    n = chromes.shape[0]
+    length = chromes[0].shape[0]
+    n_mutate = int(n * length * rate / 100)
+    for i in random.sample(range(n * length), n_mutate):
+        chromes[i // length][i % length] = 1 - chromes[i // length][i % length]
 
 
 def pre_pro(data, class_feat):
@@ -82,17 +69,18 @@ def train(np_data, np_class, n_class):
 
 def test(np_data, prob_tab, prob_class):
     n_rows, n_feat = np_data.shape
-    y_pred = np.zeros((n_rows))
+    y_predicted = np.zeros(n_rows)
     for i in range(n_rows):
         prob0, prob1 = prob_class[0], prob_class[1]
         for j in range(n_feat):
             prob0 *= prob_tab[0][j][np_data[i][j]]
             prob1 *= prob_tab[1][j][np_data[i][j]]
-        y_pred[i] = int(prob1 > prob0)
-    return y_pred
+        y_predicted[i] = int(prob1 > prob0)
+    return y_predicted
 
 
 def cross_val_k(np_data, np_class, k, callback):
+    errs = ([], [], [], [], [])
     random.seed(5)
     j = [0] + random.sample(range(np_data.shape[0]), k - 1) + [np_data.shape[0]]
     for i in range(k):
@@ -100,27 +88,43 @@ def cross_val_k(np_data, np_class, k, callback):
         train_class = np.concatenate((np_class[:j[i]], np_class[j[i + 1]:]))
         test_data = np.concatenate((np_data[j[i]:], np_data[:j[i + 1]]))
         test_class = np.concatenate((np_class[j[i]:], np_class[:j[i + 1]]))
-        callback(train_data, train_class, test_data, test_class)
+        run_err = callback(train_data, train_class, test_data, test_class)
+        if run_err[0] == -1:
+            print('Ignore run')
+            continue
+        for m in range(len(errs)):
+            errs[m].append(run_err[m])
+    return errs
 
 
-def error_desc(y, y_pred, err_params):
-    macc, mp0, mr0, mp1, mr1 = err_params
-    t0, f0, t1, f1, acc = 0, 0, 0, 0, 0
-    for yi, yi_pred in zip(y, y_pred):
-        t0 += int(yi == yi_pred == 0)
-        t1 += int(yi == yi_pred == 1)
-        f0 += int(yi != yi_pred == 0)
-        f1 += int(yi != yi_pred == 1)
-        acc += int(yi == yi_pred)
-    try:
-        acc /= y.shape[0]
-        macc.append(100 * acc)
-        mp0.append(100 * t0 / (t0 + f0))
-        mr0.append(100 * t0 / (t0 + f1))
-        mp1.append(100 * t1 / (t1 + f1))
-        mr1.append(100 * t1 / (t1 + f0))
-    except ZeroDivisionError:
-        print('Ignore')
+def ninety_ten(np_data, np_class, k, callback):
+    errs = ([], [], [], [], [])
+    n = np_data.shape[0]
+    train_data, train_class = np_data[:int(.9 * n)], np_class[:int(.9 * n)]
+    test_data, test_class = np_data[int(.9 * n):], np_class[int(.9 * n):]
+    run_err = callback(train_data, train_class, test_data, test_class)
+    if run_err[0] == -1:
+        print('Ignore run')
+    for m in range(len(errs)):
+        errs[m].append(run_err[m])
+    return errs
+
+
+def get_err(y, y_predicted):
+    return 100 * np.sum(y == y_predicted) / y.shape[0], 0, 0, 0, 0
+    # acc, t0, f0, t1, f1 = 0, 0, 0, 0, 0
+    # for yi, yi_predicted in zip(y, y_predicted):
+    #     t0 += int(yi == yi_predicted == 0)
+    #     t1 += int(yi == yi_predicted == 1)
+    #     f0 += int(yi != yi_predicted == 0)
+    #     f1 += int(yi != yi_predicted == 1)
+    #     acc += int(yi == yi_predicted)
+    # a_acc = 0 if y.shape[0] == 0 else 100 * acc / y.shape[0]
+    # p0 = 0 if t0 + f0 == 0 else 100 * t0 / (t0 + f0)
+    # r0 = 0 if t0 + f1 == 0 else 100 * t0 / (t0 + f1)
+    # p1 = 0 if t1 + f1 == 0 else 100 * t1 / (t1 + f1)
+    # r1 = 0 if t1 + f0 == 0 else 100 * t1 / (t1 + f0)
+    # return a_acc, p0, r0, p1, r1
 
 
 def main():
@@ -128,24 +132,19 @@ def main():
     np_data, np_class, n_class = pre_pro(data, 'Class')
 
     def nb_fitness(chrome):
-        good_data = np_data.copy()
-        for i in range(len(chrome)):
-            if chrome[i] == 0:
-                np.delete(good_data, i, 1)
-        err_params = ([], [], [], [], [])
+        good_data = np.delete(np_data, np.where(chrome == 0), 1)
 
         def cb_main(train_data, train_class, test_data, test_class):
-            global mp0, mr0, mp1, mr1
             prob_tab, prob_class = train(train_data, train_class, n_class)
-            y_pred = test(test_data, prob_tab, prob_class)
-            error_desc(test_class, y_pred, err_params)
+            y_predicted = test(test_data, prob_tab, prob_class)
+            return get_err(test_class, y_predicted)
 
-        cross_val_k(np_data, np_class, 2, cb_main)
-
-        return sum(err_params[0]) / len(err_params[0])
+        # err = cross_val_k(good_data, np_class, 10, cb_main)
+        err = ninety_ten(good_data, np_class, 10, cb_main)
+        return sum(err[0]) / len(err[0])
 
     chromosomes = generate(np_data.shape[1], 30)
-    for _ in range(10):
+    for _ in range(100):
         select(chromosomes, nb_fitness)
         crossover(chromosomes, 25)
         mutate(chromosomes, 10)
