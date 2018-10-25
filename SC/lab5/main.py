@@ -18,7 +18,8 @@ def upper(arr, x):
 
 
 def generate(length, n):
-    return [[random.randint(0, 1) for _ in range(length)] for _ in range(n)]
+    return np.random.randint(0, 2, (n, length))
+    # return [[random.randint(0, 1) for _ in range(length)] for _ in range(n)]
 
 
 def select(chromes, fitness):
@@ -95,7 +96,7 @@ def test(np_data, prob_tab, prob_class):
 def cross_val_k(np_data, np_class, k, callback):
     random.seed(5)
     j = [0] + random.sample(range(np_data.shape[0]), k - 1) + [np_data.shape[0]]
-    j = [0] + [np_data.shape[0]*.9] + [np_data.shape[0]]
+    j = [0] + [np_data.shape[0] * .9] + [np_data.shape[0]]
     for i in range(k):
         train_data = np.concatenate((np_data[:j[i]], np_data[j[i + 1]:]))
         train_class = np.concatenate((np_class[:j[i]], np_class[j[i + 1]:]))
