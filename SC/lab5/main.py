@@ -83,7 +83,7 @@ def cross_val_k(np_data, np_class, k, callback):
     errs = ([], [], [], [], [])
     random.seed(5)
     j = [0] + random.sample(range(np_data.shape[0]), k - 1) + [np_data.shape[0]]
-    j = [0] + [np_data.shape[0]*.9] + [np_data.shape[0]]
+    j = [0] + [np_data.shape[0] * .9] + [np_data.shape[0]]
     for i in range(k):
         train_data = np.concatenate((np_data[:j[i]], np_data[j[i + 1]:]))
         train_class = np.concatenate((np_class[:j[i]], np_class[j[i + 1]:]))
