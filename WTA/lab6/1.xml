@@ -1,0 +1,108 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!-- <?xml-stylesheet href="1.xsl"?> -->
+<?xml-stylesheet type="text/xsl" href="c1.xsl"?>
+<!-- <?xml-stylesheet type="text/xsl" href="c2.xsl"?> -->
+
+<root>
+    <concert_ad>
+        <name>ColdPlay</name>
+        <place>
+            <venue>XYZ Stadium</venue>
+            <address>XYZ Stadium, #123, ABC area, 576101, Mangalore</address>
+            <contact>9878675643</contact>
+        </place>
+        <datetime>
+            <date>12-12-2018</date>
+            <time>22:00:00</time>
+        </datetime>
+        <genre>Pop</genre>
+        <performer>
+            <first_name>Chris</first_name>
+            <last_name>Martin</last_name>
+            <role>Lead singer</role>
+        </performer>
+        <performer>
+            <first_name>Jonny</first_name>
+            <last_name>Buckland</last_name>
+            <role>Lead guitarist</role>
+        </performer>
+        <ticket type="gold">
+            <price>90</price>
+            <discount>5</discount>
+        </ticket>
+        <seller>
+            <name>Srinag</name>
+            <email>seller@maildrop.cc</email>
+            <phone>433453412</phone>
+            <address>NITK Hostels, NITK, Surathkal</address>
+        </seller>
+    </concert_ad>
+
+    <concert_ad>
+        <name>WarmPlay</name>
+        <place>
+            <venue>ABC Stadium</venue>
+            <address>ABC Stadium, #456, XYZ area, 576102, Mangalore</address>
+            <contact>9878675643</contact>
+        </place>
+        <datetime>
+            <date>12-04-2018</date>
+            <time>22:00:00</time>
+        </datetime>
+        <genre>Classical</genre>
+        <performer>
+            <first_name>Chris</first_name>
+            <last_name>Martin</last_name>
+            <role>Lead singer</role>
+        </performer>
+        <performer>
+            <first_name>Jonny</first_name>
+            <last_name>Buckland</last_name>
+            <role>Lead guitarist</role>
+        </performer>
+        <ticket type="silver">
+            <price>75</price>
+            <discount>5</discount>
+        </ticket>
+        <seller>
+            <name>Srinag</name>
+            <email>seller@maildrop.cc</email>
+            <phone>433453412</phone>
+            <address>NITK Hostels, NITK, Surathkal</address>
+        </seller>
+    </concert_ad>
+
+    <concert_ad>
+        <name>HotPlay</name>
+        <place>
+            <venue>MNO Stadium</venue>
+            <address>MNO Stadium, #321, PQR area, 576103, Mangalore</address>
+            <contact>9878675643</contact>
+        </place>
+        <datetime>
+            <date>12-04-2018</date>
+            <time>22:00:00</time>
+        </datetime>
+        <genre>Instrumental</genre>
+        <performer>
+            <first_name>Chris</first_name>
+            <last_name>Martin</last_name>
+            <role>Lead singer</role>
+        </performer>
+        <performer>
+            <first_name>Jonny</first_name>
+            <last_name>Buckland</last_name>
+            <role>Lead guitarist</role>
+        </performer>
+        <ticket type="ordinary">
+            <price>50</price>
+            <discount>0</discount>
+        </ticket>
+        <seller>
+            <name>Srinag</name>
+            <email>seller@maildrop.cc</email>
+            <phone>433453412</phone>
+            <address>NITK Hostels, NITK, Surathkal</address>
+        </seller>
+    </concert_ad>
+</root>

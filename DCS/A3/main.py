@@ -18,8 +18,11 @@ class Com:
         self.run = True
         self.cb = cb
         self.in_cs = False
+        self.time = 0
+        self.reply_count = 0
 
     def init(self):
+        self.time = self.pid
         self.sock.bind(('localhost', Com.base_port + self.pid))
         self.receive_thread.start()
 
@@ -42,8 +45,18 @@ class Com:
                 else:
                     threading.Thread(target=self.sleepy_send, args=(delay_send[pid], pid, enc)).start()
 
+    def foo(self):
+        self.reply_count = 0
+        self.cb()
+        self.queue.pop(0)
+        self.time += 1
+        time = Com.get_time()
+        msg = 'REL;' + str(time)
+        self.broadcast(msg)
+        print('Released lock')
+
     def receive(self):
-        reply_count = 0
+        self.reply_count = 0
         while self.run:
             data, address = self.sock.recvfrom(Com.read_size)
             if not self.run:
@@ -51,28 +64,30 @@ class Com:
             from_pid = Com.get_pid(address)
             data = str(data.decode()).split(';')
             time = int(data[1])
+            self.time = max(self.time, time) + 1
             if data[0] == 'REQ':
                 self.queue.append((time, from_pid))
                 self.queue.sort(key=lambda tup: tup[0])
-                msg = 'REP;' + data[1]
+                self.time += 1
+                time = Com.get_time()
+                msg = 'REP;' + str(time)
                 self.sock.sendto(msg.encode(), ('localhost', Com.get_port(from_pid)))
             elif data[0] == 'REP':
-                reply_count += 1
+                self.reply_count += 1
             elif data[0] == 'REL':
                 self.queue.pop(0)
-            if reply_count == self.n - 1 and len(self.queue) != 0 and self.queue[0][1] == self.pid:
-                self.cb()
-                print('Released')
-                self.queue.pop(0)
-                self.broadcast('REL')
-                reply_count = 0
+            if self.reply_count == self.n - 1 and len(self.queue) != 0 and self.queue[0][1] == self.pid:
+                threading.Thread(target=self.foo).start()
+            # print(self.queue)
 
-    def get_lock(self, delay_send=None):
-        print('Requesting lock')
+    def lock(self, delay_send=None):
+        self.time += 1
         time = Com.get_time()
         request = 'REQ;' + str(time)
-        self.broadcast(request, delay_send)
         self.queue.append((time, self.pid))
+        self.queue.sort(key=lambda tup: tup[0])
+        self.broadcast(request, delay_send)
+        print('Requested lock')
 
     @staticmethod
     def get_port(pid):
@@ -95,22 +110,22 @@ def main():
     n, pid = int(sys.argv[1]), int(sys.argv[2])
 
     def use_cs():
-        print('Got lock')
+        print('Locked')
         print('Using CS')
         sleep(10)
-        print('Releasing lock')
+        print('Unlocked')
 
     com = Com(n, pid, use_cs)
     com.init()
     try:
         if pid == 0:
             sleep(10)
-            com.get_lock([0, 2, 15])
+            com.lock([0, 5, 15])
         if pid == 1:
             pass
         if pid == 2:
             sleep(5)
-            com.get_lock([15, 10, 0])
+            com.lock([15, 10, 0])
         input()
     except KeyboardInterrupt:
         pass
