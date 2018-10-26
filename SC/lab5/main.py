@@ -1,6 +1,5 @@
 import pandas as pd
 import numpy as np
-import random
 
 
 def generate(length, n):
@@ -10,29 +9,35 @@ def generate(length, n):
 def select(chromes, fitness_func):
     n = chromes.shape[0]
     fitness = np.apply_along_axis(fitness_func, 0, chromes)
-    fitness_sum = np.sum(fitness)
-    cumulative = np.cumsum(fitness / fitness_sum)
-    chromes[:] = np.array([chromes[np.searchsorted(cumulative, (random.random(),), side='left')[0]] for _ in range(n)])
+    cumulative = np.cumsum(fitness / np.sum(fitness))
+    return np.array([chromes[np.searchsorted(cumulative, (np.random.random(),), side='left')[0]] for _ in range(n)])
 
 
 def crossover(chromes, rate):
     n = chromes.shape[0]
     length = chromes[0].shape[0]
-    n_crossover = int(len(chromes) * rate / 100)
-    index = random.sample(range(n), n_crossover)
+    n_crossover = int(n * rate / 100)
+    index = np.random.choice(range(n), n_crossover, False)
     new_chromes = chromes.copy()
-    for i in range(n_crossover):
-        point = random.randint(0, length - 1)
-        new_chromes[index[i - 1]] = np.concatenate((chromes[index[i - 1]][:point], chromes[index[i]][point:]))
-    chromes[:] = new_chromes
+    j = 0
+    while j < n:
+        np.random.shuffle(index)
+        for i in range(n_crossover):
+            point = np.random.randint(0, length)
+            new_chromes[j] = np.concatenate((chromes[index[i - 1]][:point], chromes[index[i]][point:]))
+            j += 1
+            if j >= n:
+                break
+    return new_chromes
 
 
 def mutate(chromes, rate):
     n = chromes.shape[0]
     length = chromes[0].shape[0]
     n_mutate = int(n * length * rate / 100)
-    for i in random.sample(range(n * length), n_mutate):
+    for i in np.random.choice(range(n * length), n_mutate, False):
         chromes[i // length][i % length] = 1 - chromes[i // length][i % length]
+    return chromes
 
 
 def pre_pro(data, class_feat):
@@ -48,7 +53,6 @@ def pre_pro(data, class_feat):
     class_index = list(data).index(class_feat)
     data[class_feat] = class_col
     np_data_class = data.values
-    np.random.seed(1)
     np.random.shuffle(np_data_class)
     return np.delete(np_data_class, class_index, axis=1), np_data_class[:, class_index], class_count + 1
 
@@ -79,56 +83,29 @@ def test(np_data, prob_tab, prob_class):
     return y_predicted
 
 
-def cross_val_k(np_data, np_class, k, callback):
-    errs = ([], [], [], [], [])
-    random.seed(5)
-    j = [0] + random.sample(range(np_data.shape[0]), k - 1) + [np_data.shape[0]]
-    j = [0] + [np_data.shape[0] * .9] + [np_data.shape[0]]
-    for i in range(k):
-        train_data = np.concatenate((np_data[:j[i]], np_data[j[i + 1]:]))
-        train_class = np.concatenate((np_class[:j[i]], np_class[j[i + 1]:]))
-        test_data = np.concatenate((np_data[j[i]:], np_data[:j[i + 1]]))
-        test_class = np.concatenate((np_class[j[i]:], np_class[:j[i + 1]]))
-        run_err = callback(train_data, train_class, test_data, test_class)
-        if run_err[0] == -1:
-            print('Ignore run')
-            continue
-        for m in range(len(errs)):
-            errs[m].append(run_err[m])
-    return errs
-
-
-def ninety_ten(np_data, np_class, k, callback):
-    errs = ([], [], [], [], [])
+def split_call(np_data, np_class, train_split, callback):
     n = np_data.shape[0]
-    train_data, train_class = np_data[:int(.9 * n)], np_class[:int(.9 * n)]
-    test_data, test_class = np_data[int(.9 * n):], np_class[int(.9 * n):]
-    run_err = callback(train_data, train_class, test_data, test_class)
-    if run_err[0] == -1:
-        print('Ignore run')
-    for m in range(len(errs)):
-        errs[m].append(run_err[m])
-    return errs
+    mark = int(train_split * n)
+    train_data, train_class = np_data[:mark], np_class[:mark]
+    test_data, test_class = np_data[mark:], np_class[mark:]
+    return callback(train_data, train_class, test_data, test_class)
 
 
-def get_err(y, y_predicted):
-    return 100 * np.sum(y == y_predicted) / y.shape[0], 0, 0, 0, 0
-    # acc, t0, f0, t1, f1 = 0, 0, 0, 0, 0
-    # for yi, yi_predicted in zip(y, y_predicted):
-    #     t0 += int(yi == yi_predicted == 0)
-    #     t1 += int(yi == yi_predicted == 1)
-    #     f0 += int(yi != yi_predicted == 0)
-    #     f1 += int(yi != yi_predicted == 1)
-    #     acc += int(yi == yi_predicted)
-    # a_acc = 0 if y.shape[0] == 0 else 100 * acc / y.shape[0]
-    # p0 = 0 if t0 + f0 == 0 else 100 * t0 / (t0 + f0)
-    # r0 = 0 if t0 + f1 == 0 else 100 * t0 / (t0 + f1)
-    # p1 = 0 if t1 + f1 == 0 else 100 * t1 / (t1 + f1)
-    # r1 = 0 if t1 + f0 == 0 else 100 * t1 / (t1 + f0)
-    # return a_acc, p0, r0, p1, r1
+def main1():
+    np.random.seed(1)
+    data = pd.read_csv('SPECT.csv')
+    np_data, np_class, n_class = pre_pro(data, 'Class')
+
+    def cb_main(train_data, train_class, test_data, test_class):
+        prob_tab, prob_class = train(train_data, train_class, n_class)
+        y_predicted = test(test_data, prob_tab, prob_class)
+        return 100 * np.sum(test_class == y_predicted) / test_class.shape[0]
+
+    print(split_call(np_data, np_class, .9, cb_main))
 
 
 def main():
+    np.random.seed(1)
     data = pd.read_csv('SPECT.csv')
     np_data, np_class, n_class = pre_pro(data, 'Class')
 
@@ -138,18 +115,17 @@ def main():
         def cb_main(train_data, train_class, test_data, test_class):
             prob_tab, prob_class = train(train_data, train_class, n_class)
             y_predicted = test(test_data, prob_tab, prob_class)
-            return get_err(test_class, y_predicted)
+            return 100 * np.sum(test_class == y_predicted) / test_class.shape[0]
 
-        # err = cross_val_k(good_data, np_class, 10, cb_main)
-        err = ninety_ten(good_data, np_class, 10, cb_main)
-        return sum(err[0]) / len(err[0])
+        return split_call(good_data, np_class, .9, cb_main)
 
     chromosomes = generate(np_data.shape[1], 30)
-    for _ in range(100):
-        select(chromosomes, nb_fitness)
-        crossover(chromosomes, 25)
-        mutate(chromosomes, 10)
-        print(sum([nb_fitness(chrome) for chrome in chromosomes]) / len(chromosomes))
+    for i in range(100):
+        chromosomes = select(chromosomes, nb_fitness)
+        chromosomes = crossover(chromosomes, 25)
+        chromosomes = mutate(chromosomes, 10)
+        print('%3d: %d%%' % (i, sum([nb_fitness(chrome) for chrome in chromosomes]) / len(chromosomes)))
+        # print(nb_fitness(chromosomes[0]))
 
 
 if __name__ == '__main__':
