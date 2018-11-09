@@ -1,0 +1,18 @@
+expr -> INT
+expr -> - expr
+assign_stmt -> ID = expr ;
+stmt -> assign_stmt
+stmt_list -> stmt
+expr -> ID
+expr -> ID
+expr -> expr == expr
+print_stmt -> PRINT STRING ;
+stmt -> print_stmt
+stmt_list -> stmt
+print_stmt -> PRINT STRING ;
+stmt -> print_stmt
+stmt_list -> stmt
+if_stmt -> IF expr THEN stmt_list ELSE stmt_list ENDIF
+stmt -> if_stmt
+stmt_list -> stmt_list stmt
+program -> stmt_list

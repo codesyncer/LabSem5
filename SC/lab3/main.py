@@ -37,14 +37,14 @@ def train(np_data, np_class, n_class):
 
 def test(np_data, prob_tab, prob_class):
     n_rows, n_feat = np_data.shape
-    y_pred = np.zeros((n_rows))
+    y_predicted = np.zeros(n_rows)
     for i in range(n_rows):
         prob0, prob1 = prob_class[0], prob_class[1]
         for j in range(n_feat):
             prob0 *= prob_tab[0][j][np_data[i][j]]
             prob1 *= prob_tab[1][j][np_data[i][j]]
-        y_pred[i] = int(prob1 > prob0)
-    return y_pred
+        y_predicted[i] = int(prob1 > prob0)
+    return y_predicted
 
 
 def cross_val_k(np_data, np_class, k, callback):
