@@ -17,16 +17,20 @@ void cg_after_if(int no_else);
 void cg_after_else();
 void cg_print();
 void cg_string();
+void cg_weval();
+void cg_after_while();
+void cg_before_while();
 %}
 
 %union { int con; int num; char str[50]; }
 
+%token <con> WHILE
+%token <con> ENDWHILE
 %token <con> IF
 %token <con> THEN
 %token <con> ELSE
 %token <con> ENDIF
 %token <con> PRINT
-%token <con> WHILE
 %token <con> NEWLINE
 %token <str> STRING
 %token <str> COMMENT
@@ -56,7 +60,8 @@ stmt_list:
     | stmt { fprintf(prod_file,"%s\n", "stmt_list -> stmt"); };
 stmt: assign_stmt { fprintf(prod_file,"%s\n", "stmt -> assign_stmt"); }
     | print_stmt { fprintf(prod_file,"%s\n", "stmt -> print_stmt"); }
-    | if_stmt { fprintf(prod_file,"%s\n", "stmt -> if_stmt"); };
+    | if_stmt { fprintf(prod_file,"%s\n", "stmt -> if_stmt"); }
+    | while_stmt { fprintf(prod_file,"%s\n", "stmt -> while_stmt"); };
 assign_stmt: 
     ID {push();} '=' {push();} expr ';' { fprintf(prod_file,"%s\n", "assign_stmt -> ID = expr ;"); cg_assign(); }
     | error ';';
@@ -65,6 +70,8 @@ print_stmt:
     | PRINT STRING {push();} ';' { fprintf(prod_file,"%s\n", "print_stmt -> PRINT STRING ;"); cg_print();}
     | PRINT NEWLINE {push();} ';' { fprintf(prod_file,"%s\n", "print_stmt -> PRINT NEWLINE ;"); cg_print();}
     | PRINT error ';';
+while_stmt:
+    WHILE {cg_before_while();} expr {cg_weval();} THEN stmt_list ENDWHILE { fprintf(prod_file,"%s\n", "while_stmt -> while expr then stmt_list endwhile ;"); cg_after_while();}
 if_stmt:
     top_if {cg_after_if(0);} ENDIF %prec IF1 { fprintf(prod_file,"%s\n", "if_stmt -> IF expr THEN stmt_list ENDIF"); } 
     | top_if {cg_after_if(1);} ELSE stmt_list ENDIF { fprintf(prod_file,"%s\n", "if_stmt -> IF expr THEN stmt_list ELSE stmt_list ENDIF"); cg_after_else(); }
@@ -147,4 +154,17 @@ void cg_after_else()
 void cg_print()
 { 
     fprintf(code_file, "PRINT %s\n", tokens[ttop--]);
+}
+void cg_before_while(){
+    fprintf(code_file, "L%d:\n", ++label);
+    labels[++ltop] = label;
+}
+void cg_weval(){
+    fprintf(code_file, "TEST %s\n", tokens[ttop--]);
+    fprintf(code_file, "JMP_ZERO L%d\n", ++label);
+    labels[++ltop] = label;
+}
+
+void cg_after_while(){
+    fprintf(code_file, "JMP L%d\nL%d:\n", labels[ltop--], labels[ltop--]);
 }

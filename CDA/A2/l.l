@@ -16,6 +16,12 @@ else {
 endif {
     return ENDIF;
 }
+while {
+    return WHILE;
+}
+endwhile {
+    return ENDWHILE;
+}
 print {
     return PRINT;
 }
